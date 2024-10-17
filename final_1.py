@@ -3,7 +3,7 @@ import pygame,sys
 from pygame.locals import *
 from PIL import *
 import LevelDefines as level
-data = {"screen_width": 1680, "screen_height": 1050, "scr": "1680x1050", "speed": [5,-5]}
+data = {"screen_width": 1680, "screen_height": 1050, "scr": "1680x1050", "fps":30}
 try:
     with open('settings.txt') as setfile:
         data = json.load(setfile)
@@ -18,7 +18,7 @@ background = pygame.Surface((scrw, scrh))
 screen = pygame.display.set_mode((scrw, scrh), DOUBLEBUF | HWSURFACE)
 pygame.display.set_caption('Brick-slayer')
 #level
-level_number=5
+level_number=1
 matrix =level.BRICK_LAYOUTS[level_number-1]
 # define font
 font = pygame.font.SysFont('typewriter', 70)
@@ -39,7 +39,7 @@ text_col = (255, 255, 255)
 cols = 17
 rows = 6
 clock = pygame.time.Clock()
-fps = 90
+fps = data["fps"]
 live_ball = False
 game_over = 0
 power_ups = []
