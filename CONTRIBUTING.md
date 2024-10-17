@@ -11,7 +11,7 @@
    - **Clone** your forked repository to your local machine using [Git](https://docs.github.com/en/get-started/getting-started-with-git/set-up-git) (make sure it's installed)
 
    ```bash
-   git clone git@github.com:your-username/repo-name.git
+   git clone git@github.com:acmpesuecc/breakout-remake.git
    ```
 
 4. **Make Your Changes**
