@@ -103,68 +103,63 @@ def calculate_ball_speed(remaining_blocks):
 
 class Paddle():
     def __init__(self):
-        self.reset()
+        self.width = 114
+        self.height = 30
+        self.x = float((scrw / 2) - (self.width / 2))
+        self.y = scrh - (self.height * 2)
+        self.rect = pygame.Rect(int(self.x), self.y, self.width, self.height)
         self.image = pygame.image.load('assets/paddle.png').convert_alpha()
         self.paddle_sound = pygame.mixer.Sound('assets/paddle.wav')
-        self.max_speed = 10
-        self.acceleration = 0.5
-        self.deceleration = 0.3
-        self.current_speed = 0
+        self.speed = 10  # Constant speed for keyboard movement
         self.direction = 0
+        self.using_keyboard = False
+        self.last_mouse_x = 0
 
     def move(self):
         keys = pygame.key.get_pressed()
+        mouse_x, _ = pygame.mouse.get_pos()
         
-        # Keyboard movement with acceleration and deceleration
-        if keys[pygame.K_LEFT]:
-            self.current_speed = max(self.current_speed - self.acceleration, -self.max_speed)
-            self.direction = -1
-        elif keys[pygame.K_RIGHT]:
-            self.current_speed = min(self.current_speed + self.acceleration, self.max_speed)
-            self.direction = 1
+        # Check for keyboard input
+        if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]:
+            self.using_keyboard = True
+            if keys[pygame.K_LEFT]:
+                self.x -= self.speed
+                self.direction = -1
+            elif keys[pygame.K_RIGHT]:
+                self.x += self.speed
+                self.direction = 1
         else:
-            # Decelerate when no key is pressed
-            if self.current_speed > 0:
-                self.current_speed = max(0, self.current_speed - self.deceleration)
-            elif self.current_speed < 0:
-                self.current_speed = min(0, self.current_speed + self.deceleration)
-            self.direction = 0
+            self.using_keyboard = False
 
-        # Apply the current speed
-        self.x += self.current_speed
-
-        # Mouse movement (override keyboard if mouse is moved)
-        mouse_x, mouse_y = pygame.mouse.get_pos()
-        mouse_dx = mouse_x - (self.x + self.width // 2)
-        if abs(mouse_dx) > 1:  # Small threshold to detect intentional mouse movement
-            self.x = mouse_x - self.width // 2
-            self.current_speed = 0  # Reset keyboard-controlled speed when using mouse
-            self.direction = 1 if mouse_dx > 0 else -1 if mouse_dx < 0 else 0
+        # Use mouse input only if keyboard is not being used
+        if not self.using_keyboard:
+            if mouse_x != self.last_mouse_x:  # Check if mouse has moved
+                self.x = float(mouse_x - self.width / 2)
+                self.direction = 1 if mouse_x > self.last_mouse_x else -1 if mouse_x < self.last_mouse_x else 0
+                self.last_mouse_x = mouse_x
+            else:
+                self.direction = 0
 
         # Ensure paddle stays within screen bounds
         if self.x < 0:
             self.x = 0
-            self.current_speed = 0
             self.direction = 0
-        elif self.x + self.width > scrw:
+        if self.x > scrw - self.width:
             self.x = scrw - self.width
-            self.current_speed = 0
             self.direction = 0
 
-        self.rect = Rect(self.x, self.y, self.width, self.height)
+        # Update the rect position
+        self.rect.x = int(self.x)
 
     def draw(self):
-        screen.blit(self.image, (self.rect.x, self.rect.y))
+        screen.blit(self.image, self.rect)
 
     def reset(self):
-        self.height = 30
-        self.width = 114
-        self.x = int((scrw / 2) - (self.width / 2))
-        self.y = scrh - (self.height * 2)
-        self.rect = Rect(self.x, self.y, self.width, self.height)
-        self.current_speed = 0
+        self.x = float((scrw / 2) - (self.width / 2))
+        self.rect.x = int(self.x)
         self.direction = 0
-
+        self.using_keyboard = False
+        self.last_mouse_x = pygame.mouse.get_pos()[0]
 class GameBall():
     def __init__(self, x, y):
         self.reset(x, y)
@@ -177,6 +172,7 @@ class GameBall():
         collision_thresh = 5
         wall_destroyed = 1
         row_count = 0
+
 
         for row in wall.blocks:
             item_count = 0
@@ -226,10 +222,10 @@ class GameBall():
         if self.rect.colliderect(player_paddle.rect):
             if abs(self.rect.bottom - player_paddle.rect.top) < collision_thresh and self.speed_y > 0:
                 self.speed_y *= -1
-                self.speed_x += player_paddle.direction
+                self.speed_x += player_paddle.direction  # Use the direction from the paddle
                 if self.speed_x > self.speed_max:
                     self.speed_x = self.speed_max
-                elif self.speed_x < 0 and self.speed_x < -self.speed_max:
+                elif self.speed_x < -self.speed_max:
                     self.speed_x = -self.speed_max
                 self.paddle_sound.play()
             self.speed_max = calculate_ball_speed(self.remaining_blocks)
