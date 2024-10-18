@@ -44,11 +44,18 @@ live_ball = False
 game_over = 0
 power_ups = []
 score=0
+dir = "left"
+pygame.mixer.init() 
+  
+# Loading the song 
+
 # function for outputting text onto the screen
 def draw_text(text, font, text_col,y):
     img = font.render(text, True, text_col)
     text_rect = img.get_rect(center=(scrw/2,y))
     screen.blit(img, text_rect)
+
+mode = "mouse"  #default controls for movement is mouse
 
 # brick wall class
 class Wall():
@@ -126,13 +133,16 @@ def calculate_ball_speed(remaining_blocks):
             return 8
         else:
             return 9
+        
 # paddle class
 class Paddle():
     def __init__(self):
         self.reset()
         self.image=pygame.image.load('assets/paddle.png').convert_alpha()
-
-    def move(self):
+        self.type = mode
+        print(self.type)
+    def move_mouse(self):
+        
         mouse_x, mouse_y = pygame.mouse.get_pos()
         self.x = mouse_x - self.width // 2
 
@@ -144,6 +154,22 @@ class Paddle():
 
         self.y = scrh - self.height
         self.rect = Rect(self.x, self.y, self.width, self.height)
+    def move_key(self):
+            if dir == "left":
+                self.x -= 30
+            elif dir == "right":
+                self.x += 30
+
+            # Keep the object within screen bounds
+            if self.x < 0:
+                self.x = 0
+            elif self.x + self.width > scrw:
+                self.x = scrw - self.width
+
+            # Set y position and update the rectangle
+            self.y = scrh - self.height
+            self.rect = Rect(self.x, self.y, self.width, self.height)
+
     def draw(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
 
@@ -175,6 +201,9 @@ class GameBall():
             for item in row:
                 # check collision
                 if self.rect.colliderect(item[0]):
+                    pygame.mixer.music.load("jump.wav") 
+                    # Start playing the song 
+                    pygame.mixer.music.play() 
                     # check if collision was from above
                     if abs(self.rect.bottom - item[0].top) < collision_thresh and self.speed_y > 0:
                         self.speed_y *= -1
@@ -233,6 +262,9 @@ class GameBall():
         # look for collision with paddle
         if self.rect.colliderect(player_paddle.rect):
             # check if colliding from the top
+            pygame.mixer.music.load("blipSelect.wav") 
+            # Start playing the song 
+            pygame.mixer.music.play() 
             if abs(self.rect.bottom - player_paddle.rect.top) < collision_thresh and self.speed_y > 0:
                 self.speed_y *= -1
                 self.speed_x += player_paddle.direction
@@ -390,6 +422,17 @@ while waiting_for_input:
                 pygame.quit()
                 sys.exit(0)
                 clock = pygame.time.Clock()
+            elif event.key == pygame.K_t:
+                if mode == "keyboard":
+                    mode  = "mouse"
+                else:
+                    mode = "keyboard"
+            elif event.key == pygame.K_LEFT:
+                dir = "left"
+            
+            elif event.key == pygame.K_RIGHT:
+                dir = "right"
+        
         elif event.type == pygame.MOUSEBUTTONDOWN and not live_ball:
             live_ball = True
             balls = [GameBall(player_paddle.x + (player_paddle.width // 2), player_paddle.y - player_paddle.height)]
@@ -400,7 +443,10 @@ while waiting_for_input:
             score = 0
 
     if live_ball:
-        player_paddle.move()  # Move the paddle first
+        if mode == "mouse":
+            player_paddle.move_mouse()  # Move the paddle first
+        elif mode == "keyboard":
+            player_paddle.move_key()
         for ball in balls:
             ball.collect_power_ups()
             game_over = ball.move()
