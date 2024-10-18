@@ -158,91 +158,92 @@ class Paddle():
         self.direction = 0
 
 # ball class
-class GameBall():
+class GameBall:
     def __init__(self, x, y):
         self.reset(x, y)
         self.image = pygame.image.load('assets/ball.png').convert_alpha()
         self.remaining_blocks = len(matrix) * len(matrix[0])
 
     def move(self):
-        # collision threshold
         collision_thresh = 6
         wall_destroyed = 1
         row_count = 0
 
+        # Check collision with blocks
         for row in wall.blocks:
             item_count = 0
             for item in row:
-                # check collision
                 if self.rect.colliderect(item[0]):
-                    # check if collision was from above
-                    if abs(self.rect.bottom - item[0].top) < collision_thresh and self.speed_y > 0:
-                        self.speed_y *= -1
-                    # check if collision was from below
-                    if abs(self.rect.top - item[0].bottom) < collision_thresh and self.speed_y < 0:
-                        self.speed_y *= -1
-                    # check if collision was from left
-                    if abs(self.rect.right - item[0].left) < collision_thresh and self.speed_x > 0:
-                        self.speed_x *= -1
-                    # check if collision was from right
-                    if abs(self.rect.left - item[0].right) < collision_thresh and self.speed_x < 0:
-                        self.speed_x *= -1
+                    # Calculate overlaps
+                    overlap_left = abs(self.rect.right - item[0].left)
+                    overlap_right = abs(self.rect.left - item[0].right)
+                    overlap_top = abs(self.rect.bottom - item[0].top)
+                    overlap_bottom = abs(self.rect.top - item[0].bottom)
 
-                    # reduce the block's strength by doing damage to block
+                    # Determine the side of collision
+                    min_overlap = min(overlap_left, overlap_right, overlap_top, overlap_bottom)
+
+                    if min_overlap == overlap_top and self.speed_y > 0:
+                        self.speed_y *= -1  # Reflect vertically
+                    elif min_overlap == overlap_bottom and self.speed_y < 0:
+                        self.speed_y *= -1
+                    elif min_overlap == overlap_left:
+                        self.speed_x = -abs(self.speed_x) - 1  # Move left with an angle
+                    elif min_overlap == overlap_right:
+                        self.speed_x = abs(self.speed_x) + 1  # Move right with an angle
+
+                    # Adjust block strength or destroy block
                     if wall.blocks[row_count][item_count][1] > 1:
                         wall.blocks[row_count][item_count][1] -= 1
                         global score
                         score += 10
-                    if random.random() < 0.005:  # 1% chance of power-up
-                        powerup.spawn_power_ups()    
                     elif wall.blocks[row_count][item_count][1] == 1:
                         wall.blocks[row_count][item_count][1] -= 1
                         wall.blocks[row_count][item_count][0] = (0, 0, 0, 0)
                         score += 10
-                        # Power-up: 5 Ball
-                        if random.random() < 0.005:  # 1% chance of power-up
-                            powerup.spawn_power_ups()
-                            
-                # check if block still exists, in which case the wall is not destroyed
+
+                    if random.random() < 0.005:  # 1% chance of power-up
+                        powerup.spawn_power_ups()
+
                 if wall.blocks[row_count][item_count][0] != (0, 0, 0, 0):
                     wall_destroyed = 0
 
-                # increase item counter
                 item_count += 1
-
-            # increase row counter
             row_count += 1
 
-        # after iterating through all the blocks, check if the wall is destroyed
+        # Check game-over conditions
         if wall_destroyed == 1:
             self.game_over = 1
         elif self.rect.bottom > scrh:
             self.game_over = -1
-            self.live_ball = False    
-        # check for collision with walls
-        if self.rect.left < 0:
-            self.speed_x = abs(self.speed_x)  # Reverse direction
-            self.rect.left = 0  # Adjust position to stay within the screen
-        elif self.rect.right > scrw:
-            self.speed_x = -abs(self.speed_x)  # Reverse direction
-            self.rect.right = scrw  # Adjust position to stay within the screen
+            self.live_ball = False
 
-        # check for collision with top and bottom of the screen
+        # Handle wall collisions
+        if self.rect.left < 0:
+            self.speed_x = abs(self.speed_x)
+            self.rect.left = 0
+        elif self.rect.right > scrw:
+            self.speed_x = -abs(self.speed_x)
+            self.rect.right = scrw
+
         if self.rect.top < 0:
             self.speed_y *= -1
-        # look for collision with paddle
-        if self.rect.colliderect(player_paddle.rect):
-            # check if colliding from the top
-            if abs(self.rect.bottom - player_paddle.rect.top) < collision_thresh and self.speed_y > 0:
-                self.speed_y *= -1
-                self.speed_x += player_paddle.direction
-                if self.speed_x > self.speed_max:
-                    self.speed_x = self.speed_max
-                elif self.speed_x < 0 and self.speed_x < -self.speed_max:
-                    self.speed_x = -self.speed_max
-            else:
-                self.speed_max = calculate_ball_speed(ball.remaining_blocks)
 
+        # Handle paddle collision
+        if self.rect.colliderect(player_paddle.rect):
+            paddle_center = player_paddle.rect.centerx
+            hit_pos = self.rect.centerx
+
+            # Calculate how far the hit was from the paddle's center
+            offset = (hit_pos - paddle_center) / (player_paddle.rect.width / 2)
+
+            # Apply horizontal speed change based on where the ball hit the paddle
+            self.speed_x = offset * self.speed_max  # Adjust X speed proportionally
+
+            # Ensure the ball moves upwards
+            self.speed_y = -abs(self.speed_y)
+
+        # Update ball position
         self.rect.x += self.speed_x
         self.rect.y += self.speed_y
 
@@ -250,6 +251,7 @@ class GameBall():
 
     def draw(self):
         screen.blit(self.image, (self.rect.x, self.rect.y))
+
     def reset(self, x, y):
         self.ball_rad = 11
         self.x = x - self.ball_rad
@@ -260,14 +262,22 @@ class GameBall():
         self.speed_max = 6
         self.game_over = 0
         self.live_ball = True
+
     def collect_power_ups(self):
         for power_up in power_ups:
             if not power_up.is_collected() and self.rect.colliderect(
-                pygame.Rect(power_up.x - power_up.radius, power_up.y - power_up.radius, 2 * power_up.radius, 2 * power_up.radius)
+                pygame.Rect(
+                    power_up.x - power_up.radius,
+                    power_up.y - power_up.radius,
+                    2 * power_up.radius,
+                    2 * power_up.radius,
+                )
             ):
                 power_up.collect()
+
     def is_off_screen(self):
         return self.rect.y > scrh
+
 # power up class
 class powerup():
     def __init__(self, x, y):
@@ -276,7 +286,7 @@ class powerup():
         self.radius = 10
         self.color = (255, 0, 0)  # Red color for the power-up
         self.collected=False
-    
+
     @staticmethod
     def spawn_power_ups():
         # Get the center of the paddle
@@ -338,21 +348,21 @@ player_paddle = Paddle()
 # create initial ball
 balls = [GameBall(player_paddle.x + (player_paddle.width // 2), player_paddle.y - player_paddle.height),speed]
 live_ball = False
-# before the game starts, to prevent a blank screen 
-start_image = pygame.image.load('assets/Untitled.png').convert_alpha() 
+# before the game starts, to prevent a blank screen
+start_image = pygame.image.load('assets/Untitled.png').convert_alpha()
 logo_rect = start_image.get_rect()
 
 waiting_for_input = True
 selected_level = 1
 while waiting_for_input:
     clock.tick(60)
-    current_time=pygame.time.get_ticks() 
+    current_time=pygame.time.get_ticks()
     screen.blit(start_image, (scrw / 2 - logo_rect.width / 2, scrh // 2 - logo_rect.height / 2))
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
                 waiting_for_input=False
         pygame.display.update()
-        
+
 level_number=selected_level
 
 waiting_for_input = True
