@@ -320,9 +320,9 @@ class powerup():
 
 #score
 def draw_score():
-    score_font = pygame.font.SysFont('typewriter', 40)
+    score_font = pygame.font.SysFont('Bahnschrift', 40)
     score_text = f"Score: {score}"
-    draw_text(score_text, score_font, text_col, 10)
+    draw_text(score_text, score_font, text_col, 25)
 #clock
 clock = pygame.time.Clock()
 
