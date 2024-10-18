@@ -2,13 +2,56 @@ import os,sys
 import tkinter as tk
 from PIL import Image, ImageTk
 from subprocess import Popen
+from tkinter import messagebox
+import json
+
+SETTINGS_FILE = "settings.txt"  
+
 def start_game():
     # Add the code to start your game here
     import final_1
     sys.exit()
+
+def load_settings():
+    if os.path.exists(SETTINGS_FILE):
+        with open(SETTINGS_FILE, 'r') as f:
+            settings = json.load(f) 
+    else:
+        settings = {"screen_width": 1280, "screen_height": 720, "scr": "1280x720", "fps": 30}
+    return settings
+
+def save_settings(new_resolution):
+    width, height = map(int, new_resolution.split('x'))  
+    settings = load_settings() 
+    settings["screen_width"] = width
+    settings["screen_height"] = height
+    settings["scr"] = new_resolution
+    
+    with open(SETTINGS_FILE, 'w') as f:
+        json.dump(settings, f, indent=4) 
+    messagebox.showinfo("Settings", "Settings saved successfully!")
+
 def open_settings():
-    # Add code to open settings window or perform settings actions
-    print("Open Settings")
+    settings = load_settings()
+    current_resolution = settings["scr"]
+
+    def update_resolution():
+        selected_resolution = resolution_var.get()
+        save_settings(selected_resolution)  
+    settings_window = tk.Tk()
+    settings_window.title("Settings")
+    resolution_var = tk.StringVar(value=current_resolution) 
+    resolution_label = tk.Label(settings_window, text="Select Resolution:")
+    resolution_label.pack(pady=10)
+
+    resolutions = ["1280x720", "1366x768", "1920x1080"] 
+    resolution_menu = tk.OptionMenu(settings_window, resolution_var, *resolutions)
+    resolution_menu.pack(pady=10)
+
+    apply_button = tk.Button(settings_window, text="Apply", command=update_resolution)
+    apply_button.pack(pady=20)
+
+    settings_window.mainloop()
 
 def exit_game():
     # Add code to gracefully exit the application
