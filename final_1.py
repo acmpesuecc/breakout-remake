@@ -215,7 +215,12 @@ class GameBall():
 
         # after iterating through all the blocks, check if the wall is destroyed
         if wall_destroyed == 1:
-            self.game_over = 1
+            self.game_over = 1  # Indicate the game is won
+            global level_number
+            level_number += 1  # Move to the next level
+            if level_number > len(level.BRICK_LAYOUTS):  # Reset if no more levels
+                level_number = 1  # Restart from level 1
+        
         elif self.rect.bottom > scrh:
             self.game_over = -1
             self.live_ball = False    
@@ -376,6 +381,9 @@ while waiting_for_input:
                 score = 0
             elif event.key ==K_RETURN:
                 level_number+=1
+                matrix = level.BRICK_LAYOUTS[level_number - 1]
+                wall.create_wall(matrix)
+
                 live_ball = True
                 balls = [GameBall(player_paddle.x + (player_paddle.width // 2), player_paddle.y - player_paddle.height)]
                 player_paddle.reset()
