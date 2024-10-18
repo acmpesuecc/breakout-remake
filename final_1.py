@@ -52,80 +52,80 @@ def draw_text(text, font, text_col,y):
 
 # brick wall class
 class Wall():
+
     def __init__(self):
         self.width = 115
         self.height = 35
-        self.blocks=[]
+        self.blocks = []
+        
+        # Pre-load images for each strength level
+        self.images = {
+            1: pygame.transform.scale(pygame.image.load("assets/red.png").convert(), (115, 35)),
+            2: pygame.transform.scale(pygame.image.load("assets/gold.png").convert(), (115, 35)),
+            3: pygame.transform.scale(pygame.image.load("assets/blue.png").convert(), (115, 35)),
+            4: pygame.transform.scale(pygame.image.load("assets/purple.png").convert(), (115, 35)),
+            5: pygame.transform.scale(pygame.image.load("assets/green.png").convert(), (115, 35))
+        }
+
     def create_wall(self, matrix):
+        """
+        Create the wall from a given matrix where each element represents
+        the strength of a block (0 means no block).
+        """
         for row_index, row_values in enumerate(matrix):
             block_row = []
             for col_index, strength in enumerate(row_values):
                 if strength == 0:
-                    # If the strength is 0, leave the block blank
-                    continue
+                    continue  # Skip blocks with no strength
 
-                # Generate x and y positions for each block and create a rectangle from that
+                # Generate x and y positions for each block and create a rectangle
                 block_x = col_index * self.width
                 block_y = row_index * self.height
                 rect = pygame.Rect(block_x, block_y, self.width, self.height)
 
-                # Create a list to store the rect and strength data
+                # Store the rect and strength data
                 block_individual = [rect, strength]
 
-                # Append that individual block to the block row
+                # Append the individual block to the block row
                 block_row.append(block_individual)
 
             # Append the row to the full list of blocks
             self.blocks.append(block_row)
 
     def draw_wall(self, screen):
+        """
+        Draw the wall blocks on the screen using the pre-loaded images based
+        on their strength.
+        """
         for row in self.blocks:
             for block in row:
-                # assign a color based on block strength
                 strength = block[1]
                 if strength == 0:
-                    continue  # Skip if strength is 0
+                    continue  # Skip if the strength is 0
 
-                # Convert the position and size to a pygame.Rect
-                block_rect = pygame.Rect(block[0])
+                # Get the block rectangle
+                block_rect = block[0]
 
-                # Get the center of the block rectangle
-                center_x, center_y = block_rect.center
+                # Only use the corresponding image if the strength is valid
+                if strength in self.images:
+                    brick_image = self.images[strength]
+                    img_rect = brick_image.get_rect(center=block_rect.center)
 
-                # Calculate the position to blit the image
-                img_rect = None
-
-                # Draw the corresponding image based on strength
-                if strength == 1:
-                    brick_image = pygame.transform.scale(pygame.image.load("assets/red.png").convert(),(115,35))
-                    img_rect = brick_image.get_rect(center=(center_x, center_y))
-                elif strength==2:
-                    brick_image = pygame.transform.scale(pygame.image.load("assets/gold.png").convert(),(115,35))
-                    img_rect = brick_image.get_rect(center=(center_x, center_y))
-                elif strength == 3:
-                    brick_image = pygame.transform.scale(pygame.image.load("assets/blue.png").convert(),(115,35))
-                    img_rect = brick_image.get_rect(center=(center_x, center_y))
-                elif strength ==4:
-                    brick_image = pygame.transform.scale(pygame.image.load("assets/purple.png").convert(),(115,35))
-                    img_rect = brick_image.get_rect(center=(center_x, center_y))
-                elif strength ==5:
-                    brick_image = pygame.transform.scale(pygame.image.load("assets/green.png").convert(),(115,35))
-                    img_rect = brick_image.get_rect(center=(center_x, center_y))
-                else:
-                    continue
-
-                # Draw the image on the screen
-                screen.blit(brick_image, (center_x - img_rect.width / 2, center_y - img_rect.height / 2))
+                    # Draw the image on the screen
+                    screen.blit(brick_image, img_rect)
 
 def calculate_ball_speed(remaining_blocks):
-        if remaining_blocks < 5:
-            return 6
-        elif remaining_blocks < 10:
-            return 7
-        elif remaining_blocks < 15:
-            return 8
-        else:
-            return 9
+    """
+    Calculates the speed of the ball based on the number of remaining blocks.
+    """
+    if remaining_blocks < 5:
+        return 6
+    elif remaining_blocks < 10:
+        return 7
+    elif remaining_blocks < 15:
+        return 8
+    else:
+        return 9
 # paddle class
 class Paddle():
     def __init__(self):
