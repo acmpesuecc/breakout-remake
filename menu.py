@@ -38,12 +38,12 @@ image_path = os.path.join(current_dir, "assets", "Title_Remade.png")
 
 # Open the PNG image with PIL and convert it to a format compatible with Tkinter
 img = Image.open(image_path)
-img = img.resize((1320, 720))
+img = img.resize((1380, 760))
 tk_img = ImageTk.PhotoImage(img)
 
 # Create a label to display the image
 logo_label = tk.Label(root, image=tk_img)
-logo_label.pack(pady=20)
+logo_label.pack(pady=0)
 
 # Set the window size to match the image size
 window_width = 1280

@@ -3,7 +3,7 @@ import pygame,sys
 from pygame.locals import *
 from PIL import *
 import LevelDefines as level
-data = {"screen_width": 1680, "screen_height": 1050, "scr": "1680x1050", "fps":30}
+data = {"screen_width": 1680, "screen_height": 1050, "scr": "1680x1050", "fps":120}
 try:
     with open('settings.txt') as setfile:
         data = json.load(setfile)
