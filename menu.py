@@ -2,7 +2,11 @@ import os,sys
 import tkinter as tk
 from PIL import Image, ImageTk
 from subprocess import Popen
+from screeninfo import get_monitors
+
 def start_game():
+    root.destroy()
+    
     # Add the code to start your game here
     import final_1
     sys.exit()
@@ -47,8 +51,8 @@ window_height = 720
 root.geometry(f"{window_width}x{window_height}")
 
 # Create a Start Game button
-start_button = tk.Button(root, text="Start Game", command=start_game)
-start_button.pack(pady=10)
+start_button = tk.Button(root, text="Start Game", font=("Berlin Sans FB", 30), command=start_game)
+start_button.pack(pady=8)
 # Add Settings and Exit buttons to the menu bar
 settings_menu = tk.Menu(menu_bar, tearoff=0, background=menu_bg_color, foreground="white")
 menu_bar.add_cascade(label="Settings", menu=settings_menu)
