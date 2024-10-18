@@ -75,10 +75,10 @@ class Wall():
                 block_x = col_index * self.width
                 block_y = row_index * self.height
                 rect = pygame.Rect(block_x, block_y, self.width, self.height)
-                block_individual = [rect, strength]
+                # Increase brick strength by multiplying it by 3
+                block_individual = [rect, strength * 3]
                 block_row.append(block_individual)
             self.blocks.append(block_row)
-
     def draw_wall(self, screen):
         for row in self.blocks:
             for block in row:
@@ -91,15 +91,17 @@ class Wall():
                     img_rect = brick_image.get_rect(center=block_rect.center)
                     screen.blit(brick_image, img_rect)
 
+
 def calculate_ball_speed(remaining_blocks):
+    # Reduce ball speed by roughly 25%
     if remaining_blocks < 5:
-        return 6
+        return 4
     elif remaining_blocks < 10:
-        return 7
+        return 5
     elif remaining_blocks < 15:
-        return 8
+        return 6
     else:
-        return 9
+        return 7
 
 class Paddle():
     def __init__(self):
@@ -173,7 +175,6 @@ class GameBall():
         wall_destroyed = 1
         row_count = 0
 
-
         for row in wall.blocks:
             item_count = 0
             for item in row:
@@ -190,12 +191,13 @@ class GameBall():
                     if wall.blocks[row_count][item_count][1] > 1:
                         wall.blocks[row_count][item_count][1] -= 1
                         global score
-                        score += 10
+                        # Reduce score increment to 5 points per hit
+                        score += 5
                         self.brick_sound.play()
                     elif wall.blocks[row_count][item_count][1] == 1:
                         wall.blocks[row_count][item_count][1] -= 1
                         wall.blocks[row_count][item_count][0] = (0, 0, 0, 0)
-                        score += 10
+                        score += 5
                         self.brick_sound.play()
                         self.remaining_blocks -= 1
                     if random.random() < 0.005:
@@ -208,7 +210,6 @@ class GameBall():
 
         if wall_destroyed == 1:
             self.game_over = 1
-
         # Wall collision
         if self.rect.left < 0 or self.rect.right > scrw:
             self.speed_x *= -1
@@ -243,9 +244,10 @@ class GameBall():
         self.x = x - self.ball_rad
         self.y = y
         self.rect = pygame.Rect(self.x, self.y, self.ball_rad * 2, self.ball_rad * 2)
-        self.speed_x = 5
-        self.speed_y = -5
-        self.speed_max = 6
+        # Reduce initial ball speed
+        self.speed_x = 4
+        self.speed_y = -4
+        self.speed_max = 5
         self.game_over = 0
         self.live_ball = True
 
