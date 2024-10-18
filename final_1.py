@@ -81,9 +81,16 @@ class Ball(pygame.sprite.Sprite):
         self.rect.y += self.speed_y
 
         if self.rect.left <= 0 or self.rect.right >= scrw:
-            self.speed_x = -self.speed_x
+            self.speed_x = -self.speed_x  # Bounce off the sides
+
+        # Check if the ball goes off the bottom of the screen
+        if self.rect.top > scrh:
+            return True  # Indicate game over
+
         if self.rect.top <= 0:
-            self.speed_y = -self.speed_y
+            self.speed_y = -self.speed_y  # Bounce off the top
+
+        return False  # No game over
 
     def reset(self, x, y):
         self.rect.x = x - self.rect.width // 2
@@ -161,6 +168,25 @@ def display_landing_page():
                 waiting_for_input = False
         pygame.display.update()
 
+# Game Over screen
+def display_game_over():
+    waiting_for_input = True
+    while waiting_for_input:
+        clock.tick(60)
+        screen.fill((0, 0, 0))
+        draw_text("Game Over", pygame.font.SysFont('typewriter', 70), text_col, scrh // 2 - 50)
+        draw_text("Press ESC to exit", pygame.font.SysFont('typewriter', 40), text_col, scrh // 2 + 20)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+        pygame.display.update()
+
 # Run landing page before the game starts
 display_landing_page()
 
@@ -189,6 +215,10 @@ while running:
     # Collision between ball and paddle
     if pygame.sprite.collide_rect(ball, paddle):
         ball.speed_y = -abs(ball.speed_y)
+
+    # Check if the ball hits the bottom of the screen
+    if ball.update():  # This now checks for the game over condition
+        display_game_over()  # Show game over screen
 
     # Drawing only updated areas
     screen.fill(bg)
